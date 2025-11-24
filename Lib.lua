@@ -1,220 +1,247 @@
--- ZL UI Library v1.0 - Librería Modular Completa
-local ZL_UILibrary = {}
-ZL_UILibrary.__index = ZL_UILibrary
+-- ZL_UI.lua - Biblioteca de Interfaz para ZL Hub
+local ZL_UI = {}
 
 -- Servicios
-local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 
--- Configuración por defecto
-ZL_UILibrary.DefaultConfig = {
-    MainColor = Color3.fromRGB(255, 215, 0),
-    BackgroundColor = Color3.fromRGB(20, 20, 25),
-    SecondaryColor = Color3.fromRGB(30, 30, 35),
-    TextColor = Color3.fromRGB(220, 220, 220),
-    AccentColor = Color3.fromRGB(80, 80, 90),
-    CornerRadius = 6,
-    Font = Enum.Font.Gotham,
-    TitleFont = Enum.Font.GothamBold
-}
-
--- Función de inicialización
-function ZL_UILibrary:Init(config)
-    if config then
-        for key, value in pairs(config) do
-            if self.DefaultConfig[key] ~= nil then
-                self.DefaultConfig[key] = value
-            end
-        end
-    end
-    return self
-end
+-- Variables de la UI
+ZL_UI.screenGui = nil
+ZL_UI.mainFrame = nil
+ZL_UI.configFrame = nil
+ZL_UI.uiOpen = false
+ZL_UI.dragging = false
+ZL_UI.currentSection = "Combat"
+ZL_UI.floatingIcons = {}
+ZL_UI.sectionContents = {}
+ZL_UI.sectionButtons = {}
 
 -- Función para crear elementos
-function ZL_UILibrary:CreateElement(className, properties)
+function ZL_UI.createElement(className, properties)
     local element = Instance.new(className)
     for prop, value in pairs(properties) do
-        if pcall(function() return element[prop] end) then
-            element[prop] = value
-        end
+        element[prop] = value
     end
     return element
 end
 
--- Función para crear ScreenGui
-function ZL_UILibrary:CreateScreenGui(parentTo)
-    local screenGui = self:CreateElement("ScreenGui", {
-        Name = "ZLCompactUI",
-        ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        ResetOnSpawn = false
+-- Función para crear botones de sección
+function ZL_UI.createSectionButton(name, position, isFirst, parent)
+    local button = ZL_UI.createElement("TextButton", {
+        Parent = parent,
+        Name = name .. "Btn",
+        BackgroundColor3 = isFirst and Color3.fromRGB(40, 40, 45) or Color3.fromRGB(30, 30, 35),
+        Position = position,
+        Size = UDim2.new(1, -10, 0, 30),
+        Font = Enum.Font.Gotham,
+        Text = name,
+        TextColor3 = Color3.fromRGB(250, 215, 0),
+        TextSize = 12,
+        AutoButtonColor = false
     })
     
-    if gethui then
-        screenGui.Parent = gethui()
-    elseif syn and syn.protect_gui then
-        syn.protect_gui(screenGui)
-        screenGui.Parent = parentTo or game:GetService("CoreGui")
-    else
-        screenGui.Parent = parentTo or game:GetService("CoreGui")
-    end
-    
-    return screenGui
-end
-
--- Función para crear frames redondeados
-function ZL_UILibrary:CreateRoundedFrame(config)
-    local frame = self:CreateElement("Frame", {
-        BackgroundColor3 = config.BackgroundColor or self.DefaultConfig.BackgroundColor,
-        Position = config.Position or UDim2.new(0, 0, 0, 0),
-        Size = config.Size or UDim2.new(1, 0, 1, 0),
-        Visible = config.Visible ~= false
-    })
-    
-    self:CreateElement("UICorner", {
-        Parent = frame,
-        CornerRadius = UDim.new(0, config.CornerRadius or self.DefaultConfig.CornerRadius)
-    })
-    
-    if config.Stroke then
-        self:CreateElement("UIStroke", {
-            Parent = frame,
-            Color = config.StrokeColor or self.DefaultConfig.MainColor,
-            Thickness = config.StrokeThickness or 1
-        })
-    end
-    
-    if config.Parent then
-        frame.Parent = config.Parent
-    end
-    
-    return frame
-end
-
--- Función para crear textos
-function ZL_UILibrary:CreateTextLabel(config)
-    local label = self:CreateElement("TextLabel", {
-        BackgroundTransparency = config.BackgroundTransparency or 1,
-        Position = config.Position or UDim2.new(0, 0, 0, 0),
-        Size = config.Size or UDim2.new(1, 0, 1, 0),
-        Font = config.Font or self.DefaultConfig.Font,
-        Text = config.Text or "",
-        TextColor3 = config.TextColor or self.DefaultConfig.TextColor,
-        TextSize = config.TextSize or 14,
-        TextXAlignment = config.TextXAlignment or Enum.TextXAlignment.Left,
-        TextYAlignment = config.TextYAlignment or Enum.TextYAlignment.Center,
-        TextWrapped = config.TextWrapped or false
-    })
-    
-    if config.BackgroundColor then
-        label.BackgroundTransparency = 0
-        label.BackgroundColor3 = config.BackgroundColor
-    end
-    
-    if config.Parent then
-        label.Parent = config.Parent
-    end
-    
-    return label
-end
-
--- Función para crear botones
-function ZL_UILibrary:CreateButton(config)
-    local button = self:CreateElement("TextButton", {
-        BackgroundColor3 = config.BackgroundColor or self.DefaultConfig.SecondaryColor,
-        Position = config.Position or UDim2.new(0, 0, 0, 0),
-        Size = config.Size or UDim2.new(0, 100, 0, 30),
-        Font = config.Font or self.DefaultConfig.Font,
-        Text = config.Text or "Button",
-        TextColor3 = config.TextColor or self.DefaultConfig.TextColor,
-        TextSize = config.TextSize or 12,
-        AutoButtonColor = config.AutoButtonColor ~= false
-    })
-    
-    self:CreateElement("UICorner", {
+    ZL_UI.createElement("UICorner", {
         Parent = button,
-        CornerRadius = UDim.new(0, config.CornerRadius or self.DefaultConfig.CornerRadius)
+        CornerRadius = UDim.new(0, 4)
     })
     
-    if config.Stroke then
-        self:CreateElement("UIStroke", {
-            Parent = button,
-            Color = config.StrokeColor or self.DefaultConfig.AccentColor,
-            Thickness = 1
-        })
+    return button
+end
+
+-- Función para crear controles de ajuste
+function ZL_UI.createAdjustmentControl(name, position, parent, minValue, maxValue, step, currentValue, callback)
+    local controlFrame = ZL_UI.createElement("Frame", {
+        Parent = parent,
+        Name = name .. "Control",
+        BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+        Position = position,
+        Size = UDim2.new(1, -10, 0, 25)
+    })
+    
+    ZL_UI.createElement("UICorner", {
+        Parent = controlFrame,
+        CornerRadius = UDim.new(0, 4)
+    })
+    
+    ZL_UI.createElement("UIStroke", {
+        Parent = controlFrame,
+        Color = Color3.fromRGB(60, 60, 70),
+        Thickness = 1
+    })
+    
+    local nameLabel = ZL_UI.createElement("TextLabel", {
+        Parent = controlFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 8, 0, 0),
+        Size = UDim2.new(0.4, -8, 1, 0),
+        Font = Enum.Font.Gotham,
+        Text = name,
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+    
+    local valueLabel = ZL_UI.createElement("TextLabel", {
+        Parent = controlFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.4, 0, 0, 0),
+        Size = UDim2.new(0.3, 0, 1, 0),
+        Font = Enum.Font.Gotham,
+        Text = string.format("%.2f", currentValue),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 11
+    })
+    
+    local minusButton = ZL_UI.createElement("TextButton", {
+        Parent = controlFrame,
+        Name = "MinusBtn",
+        BackgroundColor3 = Color3.fromRGB(80, 80, 90),
+        Position = UDim2.new(0.7, 5, 0, 3),
+        Size = UDim2.new(0, 25, 0, 19),
+        Font = Enum.Font.GothamBold,
+        Text = "-",
+        TextColor3 = Color3.new(1, 1, 1),
+        TextSize = 12,
+        AutoButtonColor = false
+    })
+    
+    ZL_UI.createElement("UICorner", {
+        Parent = minusButton,
+        CornerRadius = UDim.new(0, 3)
+    })
+    
+    local plusButton = ZL_UI.createElement("TextButton", {
+        Parent = controlFrame,
+        Name = "PlusBtn",
+        BackgroundColor3 = Color3.fromRGB(80, 80, 90),
+        Position = UDim2.new(0.85, 5, 0, 3),
+        Size = UDim2.new(0, 25, 0, 19),
+        Font = Enum.Font.GothamBold,
+        Text = "+",
+        TextColor3 = Color3.new(1, 1, 1),
+        TextSize = 12,
+        AutoButtonColor = false
+    })
+    
+    ZL_UI.createElement("UICorner", {
+        Parent = plusButton,
+        CornerRadius = UDim.new(0, 3)
+    })
+    
+    local function updateValue(newValue)
+        local clampedValue = math.clamp(newValue, minValue, maxValue)
+        valueLabel.Text = string.format("%.2f", clampedValue)
+        callback(clampedValue)
+        return clampedValue
     end
     
-    if config.Parent then
-        button.Parent = config.Parent
-    end
+    minusButton.MouseButton1Click:Connect(function()
+        local newValue = currentValue - step
+        currentValue = updateValue(newValue)
+    end)
+    
+    plusButton.MouseButton1Click:Connect(function()
+        local newValue = currentValue + step
+        currentValue = updateValue(newValue)
+    end)
     
     -- Efectos hover
-    if config.HoverEffects then
+    local function setupButtonEffects(button)
         button.MouseEnter:Connect(function()
             TweenService:Create(button, TweenInfo.new(0.2), {
-                BackgroundColor3 = config.HoverColor or Color3.fromRGB(100, 100, 110)
+                BackgroundColor3 = Color3.fromRGB(100, 100, 110)
             }):Play()
         end)
         
         button.MouseLeave:Connect(function()
             TweenService:Create(button, TweenInfo.new(0.2), {
-                BackgroundColor3 = config.BackgroundColor or self.DefaultConfig.SecondaryColor
+                BackgroundColor3 = Color3.fromRGB(80, 80, 90)
             }):Play()
         end)
     end
     
-    if config.OnClick then
-        button.MouseButton1Click:Connect(config.OnClick)
-    end
+    setupButtonEffects(minusButton)
+    setupButtonEffects(plusButton)
     
-    return button
+    currentValue = updateValue(currentValue)
+    
+    return controlFrame
 end
 
--- Función para crear toggles
-function ZL_UILibrary:CreateToggle(config)
-    local toggleFrame = self:CreateRoundedFrame({
-        Position = config.Position,
-        Size = config.Size or UDim2.new(1, -10, 0, 25),
-        BackgroundColor = self.DefaultConfig.SecondaryColor,
-        Stroke = true,
-        StrokeColor = self.DefaultConfig.AccentColor,
-        Parent = config.Parent
+-- Función para crear toggle buttons
+function ZL_UI.createToggle(name, position, parent, funcName, customCallback, initialState, configCallback)
+    local toggleFrame = ZL_UI.createElement("Frame", {
+        Parent = parent,
+        Name = name .. "Toggle",
+        BackgroundColor3 = Color3.fromRGB(35, 35, 40),
+        Position = position,
+        Size = UDim2.new(1, -10, 0, 25)
     })
     
-    local toggleText = self:CreateTextLabel({
+    ZL_UI.createElement("UICorner", {
         Parent = toggleFrame,
+        CornerRadius = UDim.new(0, 4)
+    })
+    
+    ZL_UI.createElement("UIStroke", {
+        Parent = toggleFrame,
+        Color = Color3.fromRGB(60, 60, 70),
+        Thickness = 1
+    })
+    
+    local toggleText = ZL_UI.createElement("TextButton", {
+        Parent = toggleFrame,
+        Name = "ToggleText",
+        BackgroundTransparency = 1,
         Position = UDim2.new(0, 8, 0, 0),
         Size = UDim2.new(0.7, -8, 1, 0),
-        Text = config.Text or "Toggle",
-        TextSize = 12
+        Font = Enum.Font.Gotham,
+        Text = name,
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        AutoButtonColor = false
     })
     
-    local toggleButton = self:CreateElement("TextButton", {
+    local toggleButton = ZL_UI.createElement("TextButton", {
         Parent = toggleFrame,
-        BackgroundColor3 = self.DefaultConfig.AccentColor,
+        Name = "ToggleBtn",
+        BackgroundColor3 = Color3.fromRGB(80, 80, 90),
         Position = UDim2.new(0.7, 5, 0, 3),
         Size = UDim2.new(0, 19, 0, 19),
+        Font = Enum.Font.SourceSans,
         Text = "",
         AutoButtonColor = false
     })
     
-    self:CreateElement("UICorner", {
+    ZL_UI.createElement("UICorner", {
         Parent = toggleButton,
         CornerRadius = UDim.new(1, 0)
     })
     
-    local configButton = self:CreateButton({
+    -- Botón de configuración
+    local configButton = ZL_UI.createElement("TextButton", {
         Parent = toggleFrame,
+        Name = "ConfigBtn",
+        BackgroundColor3 = Color3.fromRGB(60, 60, 70),
         Position = UDim2.new(0.85, 5, 0, 3),
         Size = UDim2.new(0, 19, 0, 19),
+        Font = Enum.Font.GothamBold,
         Text = "⚙",
+        TextColor3 = Color3.fromRGB(220, 220, 220),
         TextSize = 10,
-        BackgroundColor = self.DefaultConfig.AccentColor,
-        HoverEffects = true
+        AutoButtonColor = false
     })
     
-    local toggleState = config.InitialState or false
+    ZL_UI.createElement("UICorner", {
+        Parent = configButton,
+        CornerRadius = UDim.new(0, 4)
+    })
+    
+    local isConfigToggle = customCallback ~= nil
+    local toggleState = initialState or false
     
     local function updateToggle()
         if toggleState then
@@ -223,12 +250,16 @@ function ZL_UILibrary:CreateToggle(config)
             }):Play()
         else
             TweenService:Create(toggleButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = self.DefaultConfig.AccentColor
+                BackgroundColor3 = Color3.fromRGB(80, 80, 90)
             }):Play()
         end
         
-        if config.OnToggle then
-            config.OnToggle(toggleState)
+        if isConfigToggle then
+            customCallback(toggleState)
+        else
+            if ZL_UI.onToggleChanged then
+                ZL_UI.onToggleChanged(funcName, toggleState)
+            end
         end
     end
     
@@ -237,506 +268,319 @@ function ZL_UILibrary:CreateToggle(config)
         updateToggle()
     end)
     
-    if config.OnConfig then
-        configButton.MouseButton1Click:Connect(config.OnConfig)
-    end
+    configButton.MouseButton1Click:Connect(function()
+        if configCallback then
+            configCallback(funcName)
+        elseif ZL_UI.onConfigClicked then
+            ZL_UI.onConfigClicked(funcName)
+        end
+    end)
+    
+    -- Efectos hover
+    configButton.MouseEnter:Connect(function()
+        TweenService:Create(configButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(100, 100, 110)
+        }):Play()
+    end)
+    
+    configButton.MouseLeave:Connect(function()
+        TweenService:Create(configButton, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+        }):Play()
+    end)
+    
+    toggleText.MouseEnter:Connect(function()
+        TweenService:Create(toggleText, TweenInfo.new(0.2), {
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+    end)
+    
+    toggleText.MouseLeave:Connect(function()
+        TweenService:Create(toggleText, TweenInfo.new(0.2), {
+            TextColor3 = Color3.fromRGB(220, 220, 220)
+        }):Play()
+    end)
     
     updateToggle()
     
-    return {
-        Frame = toggleFrame,
-        SetState = function(state)
-            toggleState = state
-            updateToggle()
-        end,
-        GetState = function()
-            return toggleState
-        end
-    }
+    return toggleFrame
 end
 
--- Función para crear sliders
-function ZL_UILibrary:CreateSlider(config)
-    local sliderFrame = self:CreateRoundedFrame({
-        Position = config.Position,
-        Size = config.Size or UDim2.new(1, -10, 0, 40),
-        BackgroundColor = self.DefaultConfig.SecondaryColor,
-        Stroke = true,
-        Parent = config.Parent
-    })
+-- Función para mostrar configuración de función
+function ZL_UI.showFunctionConfig(funcName, settings)
+    if not ZL_UI.configFrame then return end
     
-    local nameLabel = self:CreateTextLabel({
-        Parent = sliderFrame,
-        Position = UDim2.new(0, 8, 0, 5),
-        Size = UDim2.new(1, -16, 0, 15),
-        Text = config.Text or "Slider",
-        TextSize = 11
-    })
-    
-    local valueLabel = self:CreateTextLabel({
-        Parent = sliderFrame,
-        Position = UDim2.new(0, 8, 0, 20),
-        Size = UDim2.new(1, -16, 0, 15),
-        Text = tostring(config.Value or config.Min or 0),
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Right
-    })
-    
-    local track = self:CreateElement("Frame", {
-        Parent = sliderFrame,
-        BackgroundColor3 = self.DefaultConfig.AccentColor,
-        Position = UDim2.new(0, 8, 0, 32),
-        Size = UDim2.new(1, -16, 0, 4)
-    })
-    
-    self:CreateElement("UICorner", {
-        Parent = track,
-        CornerRadius = UDim.new(1, 0)
-    })
-    
-    local fill = self:CreateElement("Frame", {
-        Parent = track,
-        BackgroundColor3 = self.DefaultConfig.MainColor,
-        Size = UDim2.new(0, 0, 1, 0)
-    })
-    
-    self:CreateElement("UICorner", {
-        Parent = fill,
-        CornerRadius = UDim.new(1, 0)
-    })
-    
-    local handle = self:CreateElement("TextButton", {
-        Parent = track,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        Position = UDim2.new(0, 0, 0.5, -6),
-        Size = UDim2.new(0, 12, 0, 12),
-        Text = "",
-        AutoButtonColor = false
-    })
-    
-    self:CreateElement("UICorner", {
-        Parent = handle,
-        CornerRadius = UDim.new(1, 0)
-    })
-    
-    local min = config.Min or 0
-    local max = config.Max or 100
-    local current = config.Value or min
-    local step = config.Step or 1
-    
-    local function updateSlider(value)
-        current = math.clamp(value, min, max)
-        local ratio = (current - min) / (max - min)
-        
-        fill.Size = UDim2.new(ratio, 0, 1, 0)
-        handle.Position = UDim2.new(ratio, -6, 0.5, -6)
-        valueLabel.Text = string.format("%.2f", current)
-        
-        if config.OnChange then
-            config.OnChange(current)
+    -- Limpiar contenido anterior
+    for _, child in ipairs(ZL_UI.configContent:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
         end
     end
     
-    local function setValueFromPosition(x)
-        local relativeX = math.clamp(x, 0, track.AbsoluteSize.X)
-        local ratio = relativeX / track.AbsoluteSize.X
-        local value = min + (max - min) * ratio
-        value = math.floor(value / step) * step
-        updateSlider(value)
-    end
+    -- Actualizar título
+    ZL_UI.configTitle.Text = "CONFIGURACIÓN - " .. funcName:upper()
     
-    handle.MouseButton1Down:Connect(function()
-        local connection
-        connection = UserInputService.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement then
-                local mousePos = UserInputService:GetMouseLocation()
-                local trackPos = track.AbsolutePosition
-                setValueFromPosition(mousePos.X - trackPos.X)
+    -- Crear controles según la función
+    if funcName == "Aimbot" and settings then
+        ZL_UI.createAdjustmentControl("Rango", UDim2.new(0, 0, 0, 0), ZL_UI.configContent, 5, 50, 1, settings.Range or 25, function(value)
+            if ZL_UI.onSettingChanged then
+                ZL_UI.onSettingChanged(funcName, "Range", value)
             end
         end)
         
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                connection:Disconnect()
+        ZL_UI.createAdjustmentControl("Suavizado", UDim2.new(0, 0, 0, 30), ZL_UI.configContent, 0.08, 1, 0.01, settings.SoftCamera or 0.08, function(value)
+            if ZL_UI.onSettingChanged then
+                ZL_UI.onSettingChanged(funcName, "SoftCamera", value)
             end
         end)
-    end)
+        
+        ZL_UI.configContent.CanvasSize = UDim2.new(0, 0, 0, 60)
+    elseif funcName == "SpeedBoost" and settings then
+        ZL_UI.createAdjustmentControl("Velocidad Base", UDim2.new(0, 0, 0, 0), ZL_UI.configContent, 10, 100, 1, settings.BaseSpeed or 27, function(value)
+            if ZL_UI.onSettingChanged then
+                ZL_UI.onSettingChanged(funcName, "BaseSpeed", value)
+            end
+        end)
+        
+        ZL_UI.configContent.CanvasSize = UDim2.new(0, 0, 0, 30)
+    end
     
-    track.MouseButton1Click:Connect(function()
-        local mousePos = UserInputService:GetMouseLocation()
-        local trackPos = track.AbsolutePosition
-        setValueFromPosition(mousePos.X - trackPos.X)
-    end)
-    
-    updateSlider(current)
-    
-    return {
-        Frame = sliderFrame,
-        SetValue = updateSlider,
-        GetValue = function() return current end
-    }
+    -- Mostrar panel de configuración
+    ZL_UI.configFrame.Visible = true
 end
 
--- Función para crear dropdowns
-function ZL_UILibrary:CreateDropdown(config)
-    local dropdownFrame = self:CreateRoundedFrame({
-        Position = config.Position,
-        Size = config.Size or UDim2.new(1, -10, 0, 25),
-        BackgroundColor = self.DefaultConfig.SecondaryColor,
-        Stroke = true,
-        Parent = config.Parent
-    })
-    
-    local currentOption = config.Options[1] or "Select"
-    local isOpen = false
-    
-    local displayLabel = self:CreateTextLabel({
-        Parent = dropdownFrame,
-        Position = UDim2.new(0, 8, 0, 0),
-        Size = UDim2.new(1, -30, 1, 0),
-        Text = currentOption,
-        TextSize = 11
-    })
-    
-    local arrowLabel = self:CreateTextLabel({
-        Parent = dropdownFrame,
-        Position = UDim2.new(1, -20, 0, 0),
-        Size = UDim2.new(0, 20, 1, 0),
-        Text = "▼",
-        TextSize = 10
-    })
-    
-    local optionsFrame = self:CreateRoundedFrame({
-        Parent = dropdownFrame,
-        Position = UDim2.new(0, 0, 1, 2),
-        Size = UDim2.new(1, 0, 0, #config.Options * 25),
-        BackgroundColor = self.DefaultConfig.SecondaryColor,
-        Stroke = true,
-        Visible = false
-    })
-    
-    local function toggleDropdown()
-        isOpen = not isOpen
-        optionsFrame.Visible = isOpen
-        arrowLabel.Text = isOpen and "▲" or "▼"
+-- Función para crear iconos flotantes
+function ZL_UI.createFloatingIcon(funcName, displayName, position)
+    if ZL_UI.floatingIcons[funcName] then
+        ZL_UI.floatingIcons[funcName]:Destroy()
     end
     
-    local function selectOption(option)
-        currentOption = option
-        displayLabel.Text = option
-        toggleDropdown()
-        
-        if config.OnSelect then
-            config.OnSelect(option)
-        end
-    end
-    
-    -- Crear opciones
-    for i, option in ipairs(config.Options) do
-        local optionButton = self:CreateButton({
-            Parent = optionsFrame,
-            Position = UDim2.new(0, 0, 0, (i-1) * 25),
-            Size = UDim2.new(1, 0, 0, 25),
-            Text = option,
-            TextSize = 10,
-            BackgroundColor = self.DefaultConfig.SecondaryColor,
-            CornerRadius = 0,
-            Stroke = false,
-            OnClick = function()
-                selectOption(option)
-            end
-        })
-        
-        if i < #config.Options then
-            self:CreateElement("Frame", {
-                Parent = optionsFrame,
-                BackgroundColor3 = self.DefaultConfig.AccentColor,
-                Position = UDim2.new(0, 5, 0, i * 25),
-                Size = UDim2.new(1, -10, 0, 1)
-            })
-        end
-    end
-    
-    dropdownFrame.MouseButton1Click:Connect(toggleDropdown)
-    
-    -- Cerrar dropdown al hacer click fuera
-    local function closeDropdown(input)
-        if isOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local mousePos = UserInputService:GetMouseLocation()
-            local absPos = dropdownFrame.AbsolutePosition
-            local absSize = dropdownFrame.AbsoluteSize
-            
-            if not (mousePos.X >= absPos.X and mousePos.X <= absPos.X + absSize.X and
-                   mousePos.Y >= absPos.Y and mousePos.Y <= absPos.Y + absSize.Y + optionsFrame.AbsoluteSize.Y) then
-                toggleDropdown()
-            end
-        end
-    end
-    
-    UserInputService.InputBegan:Connect(closeDropdown)
-    
-    return {
-        Frame = dropdownFrame,
-        GetSelected = function() return currentOption end,
-        SetSelected = selectOption
+    local displayTexts = {
+        Aimbot = "Aim",
+        SpeedBoost = "Speed", 
+        AntiKnockback = "AntiKB",
+        AutoHit = "AutoHit",
+        InfiniteJump = "Jump"
     }
+    
+    local pos = position or {x = 620, y = 20 + (#ZL_UI.floatingIcons * 40)}
+    local displayText = displayTexts[funcName] or displayName:sub(1, 3)
+    
+    local icon = ZL_UI.createElement("TextButton", {
+        Parent = ZL_UI.screenGui,
+        Name = funcName .. "Icon",
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BackgroundTransparency = 0.4,
+        Position = UDim2.new(0, pos.x, 0, pos.y),
+        Size = UDim2.new(0, 80, 0, 32),
+        AutoButtonColor = false,
+        Text = displayText,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        Font = Enum.Font.GothamSemibold,
+        TextSize = 13,
+        Draggable = true
+    })
+    
+    ZL_UI.createElement("UICorner", {
+        Parent = icon,
+        CornerRadius = UDim.new(0, 6)
+    })
+    
+    ZL_UI.floatingIcons[funcName] = icon
+    
+    return icon
 end
 
--- Función para crear ventana principal
-function ZL_UILibrary:CreateMainWindow(config)
-    local screenGui = self:CreateScreenGui(config.ParentTo)
+-- Función para inicializar la UI
+function ZL_UI.Initialize(callbacks)
+    -- Configurar callbacks
+    ZL_UI.onToggleChanged = callbacks.onToggleChanged
+    ZL_UI.onConfigClicked = callbacks.onConfigClicked
+    ZL_UI.onSettingChanged = callbacks.onSettingChanged
     
-    -- Botón principal flotante
-    local mainButton = self:CreateElement("ImageButton", {
-        Parent = screenGui,
+    -- Crear ScreenGui
+    ZL_UI.screenGui = ZL_UI.createElement("ScreenGui", {
+        Name = "ZLCompactUI",
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+    
+    if gethui then
+        ZL_UI.screenGui.Parent = gethui()
+    elseif syn and syn.protect_gui then
+        syn.protect_gui(ZL_UI.screenGui)
+        ZL_UI.screenGui.Parent = game:GetService("CoreGui")
+    else
+        ZL_UI.screenGui.Parent = game:GetService("CoreGui")
+    end
+    
+    -- Crear botón principal
+    local mainButton = ZL_UI.createElement("ImageButton", {
+        Parent = ZL_UI.screenGui,
+        Name = "MainButton",
         BackgroundColor3 = Color3.new(0, 0, 0),
-        Position = config.ButtonPosition or UDim2.new(0, 20, 0, 20),
+        Position = UDim2.new(0, 20, 0, 20),
         Size = UDim2.new(0, 35, 0, 35),
-        AutoButtonColor = false
+        AutoButtonColor = false,
+        Active = true,
+        Draggable = true
     })
     
-    self:CreateElement("UICorner", {
+    ZL_UI.createElement("UICorner", {
         Parent = mainButton,
         CornerRadius = UDim.new(1, 0)
     })
     
-    local buttonStroke = self:CreateElement("UIStroke", {
+    local buttonText = ZL_UI.createElement("TextLabel", {
         Parent = mainButton,
-        Color = self.DefaultConfig.MainColor,
-        Thickness = 1
-    })
-    
-    local buttonText = self:CreateTextLabel({
-        Parent = mainButton,
-        Text = config.ButtonText or "ZL",
-        TextColor3 = self.DefaultConfig.MainColor,
-        TextSize = 14,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
         Font = Enum.Font.GothamBold,
-        TextXAlignment = Enum.TextXAlignment.Center
+        Text = "ZL",
+        TextColor3 = Color3.fromRGB(255, 215, 0),
+        TextSize = 14
     })
     
-    -- Ventana principal
-    local mainFrame = self:CreateRoundedFrame({
-        Parent = screenGui,
-        Position = config.WindowPosition or UDim2.new(0.3, 0, 0.3, 0),
-        Size = config.WindowSize or UDim2.new(0, 350, 0, 250),
-        Stroke = true,
-        StrokeColor = self.DefaultConfig.MainColor,
+    -- Crear menú principal
+    ZL_UI.mainFrame = ZL_UI.createElement("Frame", {
+        Parent = ZL_UI.screenGui,
+        Name = "MainFrame",
+        BackgroundColor3 = Color3.fromRGB(20, 20, 25),
+        Position = UDim2.new(0.3, 0, 0.3, 0),
+        Size = UDim2.new(0, 350, 0, 250),
         Visible = false
+    })
+    
+    ZL_UI.createElement("UICorner", {
+        Parent = ZL_UI.mainFrame,
+        CornerRadius = UDim.new(0, 6)
     })
     
     -- Barra de título
-    local titleBar = self:CreateRoundedFrame({
-        Parent = mainFrame,
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundColor = Color3.fromRGB(15, 15, 20),
-        CornerRadius = 0
+    local titleBar = ZL_UI.createElement("Frame", {
+        Parent = ZL_UI.mainFrame,
+        Name = "TitleBar",
+        BackgroundColor3 = Color3.fromRGB(15, 15, 20),
+        Size = UDim2.new(1, 0, 0, 30)
     })
     
-    local titleText = self:CreateTextLabel({
+    local titleText = ZL_UI.createElement("TextLabel", {
         Parent = titleBar,
+        BackgroundTransparency = 1,
         Position = UDim2.new(0, 10, 0, 0),
         Size = UDim2.new(1, -40, 1, 0),
-        Text = config.Title or "ZL PvP",
-        Font = self.DefaultConfig.TitleFont
+        Font = Enum.Font.GothamBold,
+        Text = "ZL PvP",
+        TextColor3 = Color3.fromRGB(220, 220, 220),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
     })
     
-    local closeButton = self:CreateButton({
+    -- Botón cerrar
+    local closeButton = ZL_UI.createElement("TextButton", {
         Parent = titleBar,
+        Name = "CloseButton",
+        BackgroundColor3 = Color3.fromRGB(200, 50, 50),
         Position = UDim2.new(1, -25, 0, 5),
         Size = UDim2.new(0, 20, 0, 20),
+        Font = Enum.Font.GothamBold,
         Text = "X",
-        TextSize = 12,
-        BackgroundColor = Color3.fromRGB(200, 50, 50),
-        OnClick = function()
-            mainFrame.Visible = false
-            TweenService:Create(mainButton, TweenInfo.new(0.3), {
-                BackgroundColor3 = Color3.new(0, 0, 0),
-                Size = UDim2.new(0, 35, 0, 35)
-            }):Play()
-        end
+        TextColor3 = Color3.new(1, 1, 1),
+        TextSize = 12
     })
     
     -- Contenedor principal
-    local container = self:CreateElement("Frame", {
-        Parent = mainFrame,
+    local container = ZL_UI.createElement("Frame", {
+        Parent = ZL_UI.mainFrame,
+        Name = "Container",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 0, 0, 30),
         Size = UDim2.new(1, 0, 1, -30)
     })
     
-    -- Sistema de arrastre
-    local dragging = false
-    local dragStart, frameStart
-    
-    local function startDrag(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            frameStart = mainFrame.Position
-        end
-    end
-    
-    local function updateDrag(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            mainFrame.Position = UDim2.new(
-                frameStart.X.Scale, 
-                frameStart.X.Offset + delta.X,
-                frameStart.Y.Scale, 
-                frameStart.Y.Offset + delta.Y
-            )
-        end
-    end
-    
-    local function endDrag()
-        dragging = false
-    end
-    
-    titleBar.InputBegan:Connect(startDrag)
-    titleBar.InputChanged:Connect(updateDrag)
-    UserInputService.InputEnded:Connect(endDrag)
-    
-    -- Toggle ventana
-    mainButton.MouseButton1Click:Connect(function()
-        local isVisible = mainFrame.Visible
-        mainFrame.Visible = not isVisible
-        
-        if not isVisible then
-            TweenService:Create(mainButton, TweenInfo.new(0.3), {
-                BackgroundColor3 = Color3.new(0.1, 0.1, 0.1),
-                Size = UDim2.new(0, 45, 0, 45)
-            }):Play()
-        else
-            TweenService:Create(mainButton, TweenInfo.new(0.3), {
-                BackgroundColor3 = Color3.new(0, 0, 0),
-                Size = UDim2.new(0, 35, 0, 35)
-            }):Play()
-        end
-    end)
-    
-    return {
-        ScreenGui = screenGui,
-        MainButton = mainButton,
-        MainFrame = mainFrame,
-        Container = container,
-        TitleBar = titleBar
-    }
-end
-
--- Función para crear sistema de tabs
-function ZL_UILibrary:CreateTabSystem(parent, tabs)
-    local sidebar = self:CreateRoundedFrame({
-        Parent = parent,
-        Size = UDim2.new(0, 100, 1, 0),
-        BackgroundColor = Color3.fromRGB(25, 25, 30)
+    -- Barra lateral
+    local sidebar = ZL_UI.createElement("Frame", {
+        Parent = container,
+        Name = "Sidebar",
+        BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+        Size = UDim2.new(0, 100, 1, 0)
     })
     
-    local contentFrame = self:CreateElement("Frame", {
-        Parent = parent,
+    -- Contenido
+    local contentFrame = ZL_UI.createElement("Frame", {
+        Parent = container,
+        Name = "ContentFrame",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 105, 0, 0),
         Size = UDim2.new(1, -105, 1, 0)
     })
     
-    local tabContents = {}
-    local tabButtons = {}
-    local currentTab = nil
+    -- Crear secciones
+    local sections = {"Combat", "suggestions"}
     
-    for i, tab in ipairs(tabs) do
-        -- Botón del tab
-        local tabButton = self:CreateButton({
-            Parent = sidebar,
-            Position = UDim2.new(0, 5, 0, (i-1) * 35 + 5),
-            Size = UDim2.new(1, -10, 0, 30),
-            Text = tab.Name,
-            BackgroundColor = i == 1 and Color3.fromRGB(40, 40, 45) or Color3.fromRGB(30, 30, 35),
-            HoverEffects = true
-        })
+    for i, sectionName in ipairs(sections) do
+        local buttonPos = UDim2.new(0, 5, 0, (i-1) * 35 + 5)
+        ZL_UI.sectionButtons[sectionName] = ZL_UI.createSectionButton(sectionName, buttonPos, i == 1, sidebar)
         
-        -- Contenido del tab
-        local tabContent = self:CreateElement("ScrollingFrame", {
+        ZL_UI.sectionContents[sectionName] = ZL_UI.createElement("ScrollingFrame", {
             Parent = contentFrame,
+            Name = sectionName .. "Content",
             BackgroundTransparency = 1,
             Size = UDim2.new(1, 0, 1, 0),
             Visible = i == 1,
             CanvasSize = UDim2.new(0, 0, 0, 400),
-            ScrollBarThickness = 3,
-            ScrollBarImageColor3 = self.DefaultConfig.AccentColor
+            ScrollBarThickness = 3
         })
-        
-        tabContents[tab.Name] = tabContent
-        tabButtons[tab.Name] = tabButton
-        
-        if i == 1 then
-            currentTab = tab.Name
-        end
-        
-        tabButton.MouseButton1Click:Connect(function()
-            if currentTab then
-                tabContents[currentTab].Visible = false
-                TweenService:Create(tabButtons[currentTab], TweenInfo.new(0.2), {
-                    BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-                }):Play()
-            end
-            
-            currentTab = tab.Name
-            tabContent.Visible = true
-            TweenService:Create(tabButton, TweenInfo.new(0.2), {
-                BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-            }):Play()
-            
-            if tab.OnSelected then
-                tab.OnSelected()
-            end
-        end)
     end
     
-    return {
-        Sidebar = sidebar,
-        ContentFrame = contentFrame,
-        TabContents = tabContents,
-        TabButtons = tabButtons,
-        CurrentTab = currentTab
-    }
-end
-
--- Función para crear iconos flotantes
-function ZL_UILibrary:CreateFloatingIcon(config)
-    local icon = self:CreateButton({
-        Parent = config.Parent,
-        Position = config.Position or UDim2.new(0, 100, 0, 100),
-        Size = config.Size or UDim2.new(0, 80, 0, 32),
-        Text = config.Text or "Icon",
-        BackgroundColor = Color3.fromRGB(0, 0, 0),
-        BackgroundTransparency = 0.4,
-        AutoButtonColor = false
-    })
+    -- Conectar eventos
+    mainButton.MouseButton1Click:Connect(function()
+        ZL_UI.uiOpen = not ZL_UI.uiOpen
+        ZL_UI.mainFrame.Visible = ZL_UI.uiOpen
+    end)
     
-    local dot = self:CreateElement("Frame", {
-        Parent = icon,
-        Size = UDim2.new(0, 8, 0, 8),
-        Position = UDim2.new(1, -14, 0, 12),
-        BackgroundColor3 = config.Active and Color3.fromRGB(50, 205, 50) or Color3.fromRGB(200, 50, 50)
-    })
+    closeButton.MouseButton1Click:Connect(function()
+        ZL_UI.uiOpen = false
+        ZL_UI.mainFrame.Visible = false
+    end)
     
-    self:CreateElement("UICorner", {
-        Parent = dot,
-        CornerRadius = UDim.new(1, 0)
-    })
+    -- Sistema de arrastre
+    local dragging = false
+    local dragInput, dragStart, startPos
     
-    if config.OnClick then
-        icon.MouseButton1Click:Connect(config.OnClick)
-    end
-    
-    return {
-        Icon = icon,
-        Dot = dot,
-        SetActive = function(active)
-            dot.BackgroundColor3 = active and Color3.fromRGB(50, 205, 50) or Color3.fromRGB(200, 50, 50)
-            icon.TextColor3 = active and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = ZL_UI.mainFrame.Position
         end
-    }
+    end)
+    
+    titleBar.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            ZL_UI.mainFrame.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    print("✅ ZL UI Biblioteca Cargada")
+    return ZL_UI
 end
 
-return ZL_UILibrary
+return ZL_UI
