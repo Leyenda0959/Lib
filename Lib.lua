@@ -823,6 +823,441 @@ end
             end)
         end
         
+        
+        
+        -- ========== SISTEMA DE SERVIDORES (PET FINDER) ==========
+function Elements:Servers()
+    local ServersSection = Instance.new("Frame")
+    ServersSection.Name = "ServersSection"
+    ServersSection.Parent = Page
+    ServersSection.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    ServersSection.BorderSizePixel = 0
+    ServersSection.Size = UDim2.new(1, -6, 0, 200)
+    
+    local ServersCorner = Instance.new("UICorner")
+    ServersCorner.CornerRadius = UDim.new(0, 6)
+    ServersCorner.Parent = ServersSection
+    
+    -- Header
+    local Header = Instance.new("Frame")
+    Header.Name = "Header"
+    Header.Parent = ServersSection
+    Header.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Header.BorderSizePixel = 0
+    Header.Size = UDim2.new(1, 0, 0, 30)
+    
+    local HeaderCorner = Instance.new("UICorner")
+    HeaderCorner.CornerRadius = UDim.new(0, 6)
+    HeaderCorner.Parent = Header
+    
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Parent = Header
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 8, 0, 0)
+    Title.Size = UDim2.new(0.5, 0, 1, 0)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = "Brainrot Finder"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local SettingsButton = Instance.new("ImageButton")
+    SettingsButton.Name = "SettingsButton"
+    SettingsButton.Parent = Header
+    SettingsButton.AnchorPoint = Vector2.new(1, 0.5)
+    SettingsButton.BackgroundTransparency = 1
+    SettingsButton.Position = UDim2.new(1, -8, 0.5, 0)
+    SettingsButton.Size = UDim2.new(0, 20, 0, 20)
+    SettingsButton.Image = "rbxassetid://3926307971"
+    SettingsButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
+    SettingsButton.ImageRectOffset = Vector2.new(324, 364)
+    SettingsButton.ImageRectSize = Vector2.new(36, 36)
+    
+    -- Search Section
+    local SearchSection = Instance.new("Frame")
+    SearchSection.Name = "SearchSection"
+    SearchSection.Parent = ServersSection
+    SearchSection.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SearchSection.BorderSizePixel = 0
+    SearchSection.Position = UDim2.new(0, 0, 0, 35)
+    SearchSection.Size = UDim2.new(1, 0, 0, 30)
+    
+    local SearchLabel = Instance.new("TextLabel")
+    SearchLabel.Name = "SearchLabel"
+    SearchLabel.Parent = SearchSection
+    SearchLabel.BackgroundTransparency = 1
+    SearchLabel.Position = UDim2.new(0, 8, 0, 0)
+    SearchLabel.Size = UDim2.new(0, 80, 1, 0)
+    SearchLabel.Font = Enum.Font.Gotham
+    SearchLabel.Text = "Buscar"
+    SearchLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SearchLabel.TextSize = 12
+    SearchLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local SearchBox = Instance.new("TextBox")
+    SearchBox.Name = "SearchBox"
+    SearchBox.Parent = SearchSection
+    SearchBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    SearchBox.BorderSizePixel = 0
+    SearchBox.Position = UDim2.new(0, 70, 0, 5)
+    SearchBox.Size = UDim2.new(0.5, 0, 0, 20)
+    SearchBox.Font = Enum.Font.Gotham
+    SearchBox.PlaceholderText = "Filter: All"
+    SearchBox.Text = ""
+    SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SearchBox.TextSize = 12
+    
+    local SearchBoxCorner = Instance.new("UICorner")
+    SearchBoxCorner.CornerRadius = UDim.new(0, 4)
+    SearchBoxCorner.Parent = SearchBox
+    
+    -- Auto Join Secret
+    local AutoJoinSection = Instance.new("Frame")
+    AutoJoinSection.Name = "AutoJoinSection"
+    AutoJoinSection.Parent = ServersSection
+    AutoJoinSection.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    AutoJoinSection.BorderSizePixel = 0
+    AutoJoinSection.Position = UDim2.new(0, 0, 0, 70)
+    AutoJoinSection.Size = UDim2.new(1, 0, 0, 25)
+    
+    local AutoJoinLabel = Instance.new("TextLabel")
+    AutoJoinLabel.Name = "AutoJoinLabel"
+    AutoJoinLabel.Parent = AutoJoinSection
+    AutoJoinLabel.BackgroundTransparency = 1
+    AutoJoinLabel.Position = UDim2.new(0, 8, 0, 0)
+    AutoJoinLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    AutoJoinLabel.Font = Enum.Font.Gotham
+    AutoJoinLabel.Text = "Auto Join Secret"
+    AutoJoinLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    AutoJoinLabel.TextSize = 12
+    AutoJoinLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local AutoJoinToggle = Instance.new("TextButton")
+    AutoJoinToggle.Name = "AutoJoinToggle"
+    AutoJoinToggle.Parent = AutoJoinSection
+    AutoJoinToggle.AnchorPoint = Vector2.new(1, 0.5)
+    AutoJoinToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    AutoJoinToggle.BorderSizePixel = 0
+    AutoJoinToggle.Position = UDim2.new(1, -8, 0.5, 0)
+    AutoJoinToggle.Size = UDim2.new(0, 40, 0, 20)
+    AutoJoinToggle.AutoButtonColor = false
+    AutoJoinToggle.Font = Enum.Font.SourceSans
+    AutoJoinToggle.Text = ""
+    AutoJoinToggle.TextSize = 14
+    
+    local AutoJoinToggleCorner = Instance.new("UICorner")
+    AutoJoinToggleCorner.CornerRadius = UDim.new(1, 0)
+    AutoJoinToggleCorner.Parent = AutoJoinToggle
+    
+    local AutoJoinToggleDot = Instance.new("Frame")
+    AutoJoinToggleDot.Name = "ToggleDot"
+    AutoJoinToggleDot.Parent = AutoJoinToggle
+    AutoJoinToggleDot.AnchorPoint = Vector2.new(0, 0.5)
+    AutoJoinToggleDot.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    AutoJoinToggleDot.BorderSizePixel = 0
+    AutoJoinToggleDot.Position = UDim2.new(0, 2, 0.5, 0)
+    AutoJoinToggleDot.Size = UDim2.new(0, 16, 0, 16)
+    
+    local AutoJoinToggleDotCorner = Instance.new("UICorner")
+    AutoJoinToggleDotCorner.CornerRadius = UDim.new(1, 0)
+    AutoJoinToggleDotCorner.Parent = AutoJoinToggleDot
+    
+    -- Servers List
+    local ServersList = Instance.new("ScrollingFrame")
+    ServersList.Name = "ServersList"
+    ServersList.Parent = ServersSection
+    ServersList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ServersList.BorderSizePixel = 0
+    ServersList.Position = UDim2.new(0, 0, 0, 100)
+    ServersList.Size = UDim2.new(1, 0, 1, -100)
+    ServersList.ScrollBarThickness = 4
+    ServersList.ScrollBarImageColor3 = Color3.fromRGB(232, 17, 85)
+    ServersList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    
+    local ServersListLayout = Instance.new("UIListLayout")
+    ServersListLayout.Parent = ServersList
+    ServersListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ServersListLayout.Padding = UDim.new(0, 2)
+    
+    -- Variables para el sistema
+    local SERVER_URL = "https://tngggg.vercel.app/api/teleport"
+    local displayedServers = {}
+    local autoJoinEnabled = false
+    
+    -- Función para formatear números
+    local function formatNumber(num)
+        if not num then return "0" end
+        num = tonumber(num) or 0
+        if num >= 1e9 then
+            return string.format("%.1fB", num/1e9)
+        elseif num >= 1e6 then
+            return string.format("%.1fM", num/1e6)
+        elseif num >= 1e3 then
+            return string.format("%.1fK", num/1e3)
+        end
+        return tostring(math.floor(num))
+    end
+    
+    -- Función para obtener servidores
+    local function getServers()
+        local success, response = pcall(function()
+            if request then
+                local result = request({ 
+                    Url = SERVER_URL, 
+                    Method = "GET" 
+                })
+                return result.Body
+            elseif http_request then
+                local result = http_request({ 
+                    Url = SERVER_URL, 
+                    Method = "GET" 
+                })
+                return result.Body
+            end
+            return nil
+        end)
+        
+        local filteredServers = {}
+        
+        if success and response then  
+            local ok, data = pcall(function()
+                return HttpService:JSONDecode(response)
+            end)
+            
+            if ok and data and data.success and data.activeServers then  
+                -- Filtrar servidores únicos por gameInstanceId
+                local uniqueServers = {}
+                for _, server in ipairs(data.activeServers) do
+                    if server.gameInstanceId and not uniqueServers[server.gameInstanceId] then
+                        if server.animalData and server.animalData.displayName then
+                            uniqueServers[server.gameInstanceId] = server
+                        end
+                    end
+                end
+                
+                -- Convertir de nuevo a array
+                for _, server in pairs(uniqueServers) do
+                    table.insert(filteredServers, server)
+                end
+            end
+        end
+        
+        return filteredServers
+    end
+    
+    -- Función para crear un item de servidor
+    local function createServerItem(server, index)
+        local ServerItem = Instance.new("Frame")
+        ServerItem.Name = "ServerItem_" .. server.gameInstanceId
+        ServerItem.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        ServerItem.BorderSizePixel = 0
+        ServerItem.Size = UDim2.new(1, -8, 0, 50)
+        ServerItem.Position = UDim2.new(0, 4, 0, (index-1)*52)
+        
+        local ServerCorner = Instance.new("UICorner")
+        ServerCorner.CornerRadius = UDim.new(0, 6)
+        ServerCorner.Parent = ServerItem
+        
+        local ServerStroke = Instance.new("UIStroke")
+        ServerStroke.Color = Color3.fromRGB(80, 80, 80)
+        ServerStroke.Thickness = 1
+        ServerStroke.Parent = ServerItem
+        
+        -- Información del servidor
+        local animalData = server.animalData or {}
+        local serverName = animalData.displayName or "Unknown"
+        local players = server.players or "0/8"
+        local moneyRate = formatNumber(animalData.value or 0) .. "M/s"
+        local serverType = server.secret and "Secret" or "Normal"
+        local timeAgo = "just now"
+        
+        -- Server Name
+        local NameLabel = Instance.new("TextLabel")
+        NameLabel.Name = "NameLabel"
+        NameLabel.Parent = ServerItem
+        NameLabel.BackgroundTransparency = 1
+        NameLabel.Position = UDim2.new(0, 8, 0, 5)
+        NameLabel.Size = UDim2.new(0.7, 0, 0, 20)
+        NameLabel.Font = Enum.Font.GothamBold
+        NameLabel.Text = serverName
+        NameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        NameLabel.TextSize = 12
+        NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Server Info
+        local InfoLabel = Instance.new("TextLabel")
+        InfoLabel.Name = "InfoLabel"
+        InfoLabel.Parent = ServerItem
+        InfoLabel.BackgroundTransparency = 1
+        InfoLabel.Position = UDim2.new(0, 8, 0, 25)
+        InfoLabel.Size = UDim2.new(0.7, 0, 0, 15)
+        InfoLabel.Font = Enum.Font.Gotham
+        InfoLabel.Text = string.format("Players: %s | Money/s: %s | %s | %s", players, moneyRate, serverType, timeAgo)
+        InfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        InfoLabel.TextSize = 10
+        InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Join Button
+        local JoinButton = Instance.new("TextButton")
+        JoinButton.Name = "JoinButton"
+        JoinButton.Parent = ServerItem
+        JoinButton.AnchorPoint = Vector2.new(1, 0.5)
+        JoinButton.BackgroundColor3 = Color3.fromRGB(232, 17, 85)
+        JoinButton.BorderSizePixel = 0
+        JoinButton.Position = UDim2.new(1, -8, 0.5, 0)
+        JoinButton.Size = UDim2.new(0, 60, 0, 25)
+        JoinButton.Font = Enum.Font.GothamBold
+        JoinButton.Text = "Join"
+        JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        JoinButton.TextSize = 12
+        
+        local JoinButtonCorner = Instance.new("UICorner")
+        JoinButtonCorner.CornerRadius = UDim.new(0, 4)
+        JoinButtonCorner.Parent = JoinButton
+        
+        -- Efectos hover del botón
+        JoinButton.MouseEnter:Connect(function()
+            TweenService:Create(JoinButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(200, 15, 75)
+            }):Play()
+        end)
+        
+        JoinButton.MouseLeave:Connect(function()
+            TweenService:Create(JoinButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(232, 17, 85)
+            }):Play()
+        end)
+        
+        -- Función de unirse al servidor
+        JoinButton.MouseButton1Click:Connect(function()
+            JoinButton.Text = "Joining..."
+            JoinButton.BackgroundColor3 = Color3.fromRGB(150, 12, 60)
+            
+            local success, errorMsg = pcall(function()
+                TeleportService:TeleportToPlaceInstance(
+                    tonumber(server.placeId),
+                    server.gameInstanceId,
+                    Players.LocalPlayer
+                )
+            end)
+            
+            if not success then
+                JoinButton.Text = "Failed"
+                JoinButton.BackgroundColor3 = Color3.fromRGB(120, 20, 20)
+                task.wait(1)
+                JoinButton.Text = "Join"
+                JoinButton.BackgroundColor3 = Color3.fromRGB(232, 17, 85)
+            end
+        end)
+        
+        return ServerItem
+    end
+    
+    -- Función para actualizar la lista de servidores
+    local function updateServersList()
+        local servers = getServers()
+        
+        -- Limpiar lista actual
+        for _, child in ipairs(ServersList:GetChildren()) do
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
+        end
+        
+        -- Actualizar servidores mostrados
+        displayedServers = {}
+        
+        if #servers == 0 then
+            local NoServersLabel = Instance.new("TextLabel")
+            NoServersLabel.Name = "NoServersLabel"
+            NoServersLabel.Parent = ServersList
+            NoServersLabel.BackgroundTransparency = 1
+            NoServersLabel.Size = UDim2.new(1, 0, 0, 30)
+            NoServersLabel.Font = Enum.Font.Gotham
+            NoServersLabel.Text = "No servers available"
+            NoServersLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            NoServersLabel.TextSize = 12
+            return
+        end
+        
+        -- Mostrar máximo 5 servidores
+        local maxServers = math.min(#servers, 5)
+        for i = 1, maxServers do
+            local server = servers[i]
+            if server and server.gameInstanceId and not displayedServers[server.gameInstanceId] then
+                local serverItem = createServerItem(server, i)
+                serverItem.Parent = ServersList
+                displayedServers[server.gameInstanceId] = true
+            end
+        end
+        
+        -- Actualizar tamaño del canvas
+        ServersList.CanvasSize = UDim2.new(0, 0, 0, maxServers * 52)
+    end
+    
+    -- Toggle functionality para Auto Join
+    local autoJoinState = false
+    local function updateAutoJoinToggle()
+        if autoJoinState then
+            TweenService:Create(AutoJoinToggle, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(232, 17, 85)
+            }):Play()
+            TweenService:Create(AutoJoinToggleDot, TweenInfo.new(0.2), {
+                Position = UDim2.new(1, -18, 0.5, 0)
+            }):Play()
+        else
+            TweenService:Create(AutoJoinToggle, TweenInfo.new(0.2), {
+                BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            }):Play()
+            TweenService:Create(AutoJoinToggleDot, TweenInfo.new(0.2), {
+                Position = UDim2.new(0, 2, 0.5, 0)
+            }):Play()
+        end
+    end
+    
+    AutoJoinToggle.MouseButton1Click:Connect(function()
+        autoJoinState = not autoJoinState
+        updateAutoJoinToggle()
+    end)
+    
+    -- Botón de settings
+    SettingsButton.MouseButton1Click:Connect(function()
+        -- Aquí puedes agregar funcionalidad de settings
+        print("Settings button clicked")
+    end)
+    
+    -- Actualizar lista inicial
+    updateServersList()
+    
+    -- Auto-refresh cada 10 segundos
+    task.spawn(function()
+        while ServersSection.Parent do
+            task.wait(10)
+            updateServersList()
+        end
+    end)
+    
+    -- Función para buscar servidores
+    SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        -- Implementar filtrado si es necesario
+        updateServersList()
+    end)
+    
+    local ServerFunctions = {}
+    
+    function ServerFunctions:Refresh()
+        updateServersList()
+    end
+    
+    function ServerFunctions:SetAutoJoin(state)
+        autoJoinState = state
+        updateAutoJoinToggle()
+    end
+    
+    return ServerFunctions
+end
+        
         -- Keybind
         function Elements:Keybind(text, defaultKey, callback)
             local Keybind = Instance.new("TextButton")
