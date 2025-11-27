@@ -1258,7 +1258,6 @@ end)
     
     return TabFunctions
 end
-
 -- ========== SISTEMA DE ICONOS FLOTANTES ==========
 Library.floatingIcons = {}
 Library.screenGui = nil
@@ -1274,10 +1273,16 @@ function Library:CreateFloatingIcon(funcName, displayName, callback)
     
     -- Posiciones predefinidas
     local gridPositions = {
-        Fly = {x = 620, y = 180},
-        boogieFloat = {x = 620, y = 140},
-        WebSlinger = {x = 20, y = 120},
-        AutoLazer = {x = 620, y = 100}
+        Aimbot = {x = 720, y = 120},
+        SpinBot = {x = 720, y = 160},
+        AutoHit = {x = 720, y = 200},
+        GrabActivator = {x = 720, y = 240},
+        SpeedBoost = {x = 720, y = 280},
+        AntiKnockback = {x = 720, y = 320},
+        InfiniteJump = {x = 920, y = 360},
+        AntiRagdoll = {x = 920, y = 400},
+        AntiKnockbackV2 = {x = 920, y = 440},
+        ShiftLock = {x = 720, y = 480}
     }
     
     local pos = gridPositions[funcName] or {x = math.random(100, 400), y = math.random(100, 400)}
@@ -1325,7 +1330,7 @@ function Library:CreateFloatingIcon(funcName, displayName, callback)
     dotCorner.CornerRadius = UDim.new(1, 0)
     dotCorner.Parent = dot
     
-    local iconState = false
+    local iconState = true -- Siempre empieza activo porque se crea al activar la función
     
     local function updateIconVisual()
         if iconState then
@@ -1350,23 +1355,15 @@ function Library:CreateFloatingIcon(funcName, displayName, callback)
             }):Play()
         end
     end
-    
+
+    -- Click simple para activar/desactivar la función SIN eliminar el icono
     icon.MouseButton1Click:Connect(function()
         iconState = not iconState
         updateIconVisual()
         if callback then
             callback(iconState)
         end
-    end)
-    
-    local lastClickTime = 0
-    icon.MouseButton1Click:Connect(function()
-        local currentTime = tick()
-        if currentTime - lastClickTime < 0.3 and not iconState then
-            icon:Destroy()
-            self.floatingIcons[funcName] = nil
-        end
-        lastClickTime = currentTime
+        -- NO eliminamos el icono aquí, solo cambiamos el estado
     end)
     
     self.floatingIcons[funcName] = {
@@ -1377,20 +1374,14 @@ function Library:CreateFloatingIcon(funcName, displayName, callback)
         SetState = function(state)
             iconState = state
             updateIconVisual()
+        end,
+        GetState = function()
+            return iconState
         end
     }
     
     updateIconVisual()
     return self.floatingIcons[funcName]
-end
-
-function Library:ClearFloatingIcons()
-    for funcName, iconData in pairs(self.floatingIcons) do
-        if iconData.Main and iconData.Main.Parent then
-            iconData.Main:Destroy()
-        end
-    end
-    self.floatingIcons = {}
 end
 
 return Library
